@@ -1,0 +1,24 @@
+version: "3"
+
+services: 
+  db:
+    container_name: laravel-db
+    image: mysql
+    ports:
+      - 4306:3306
+    volumes:
+      - ./db:/var/lib/mysql
+    environment:
+     - MYSQL_ROOT_PASSWORD=password
+     - MYSQL_DATABASE=laravel
+     - MYSQL_USER=admin
+     - MYSQL_PASSWORD=password
+  web:
+    build: .
+    container_name: laravel-web
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - 8000:80
+    depends_on:
+      - db
