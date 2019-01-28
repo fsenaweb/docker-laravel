@@ -5,7 +5,7 @@ services:
     container_name: laravel-db
     image: mysql
     ports:
-      - 4306:3306
+      - 3306:3306
     volumes:
       - ./db:/var/lib/mysql
     environment:
@@ -13,6 +13,16 @@ services:
      - MYSQL_DATABASE=laravel
      - MYSQL_USER=admin
      - MYSQL_PASSWORD=password
+  phpmyadmin:
+    container_name: sisnumis-phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - '8080:80'
   web:
     build: .
     container_name: laravel-web
