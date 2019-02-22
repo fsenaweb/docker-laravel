@@ -14,7 +14,7 @@ services:
      - MYSQL_USER=admin
      - MYSQL_PASSWORD=password
   phpmyadmin:
-    container_name: sisnumis-phpmyadmin
+    container_name: laravel-phpmyadmin
     image: phpmyadmin/phpmyadmin
     links:
       - db
