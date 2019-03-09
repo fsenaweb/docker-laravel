@@ -25,4 +25,6 @@ RUN mkdir -p /opt/data/public && \
     rm -rf /var/www/html && \
     ln -s /opt/data/public /var/www/html
 
+RUN chmod -R 777 /opt/data/public/storage/*
+
 WORKDIR /var/www/html
