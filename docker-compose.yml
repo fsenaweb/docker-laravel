@@ -1,6 +1,6 @@
 version: "3"
 
-services: 
+services:
   db:
     container_name: laravel-db
     image: mysql:5.7
@@ -9,10 +9,12 @@ services:
     volumes:
       - ./db:/var/lib/mysql
     environment:
-     - MYSQL_ROOT_PASSWORD=password
-     - MYSQL_DATABASE=laravel
-     - MYSQL_USER=admin
-     - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=laravel
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=password
+    networks:
+      - backend
   phpmyadmin:
     container_name: laravel-phpmyadmin
     image: phpmyadmin/phpmyadmin
@@ -23,6 +25,8 @@ services:
       PMA_PORT: 3306
     ports:
       - '8080:80'
+    networks:
+      - backend
   web:
     build: .
     container_name: laravel-web
@@ -32,3 +36,9 @@ services:
       - 8000:80
     depends_on:
       - db
+    networks:
+      - backend
+networks:
+  backend:
+    driver: bridge
+
