@@ -5,11 +5,11 @@ RUN apt-get update -y
 #arquivo necessarios
 RUN apt-get install -y \
     curl git supervisor \
-    zip unzip apt-utils \
+    zip unzip apt-utils nano \
     zlib1g-dev libicu-dev wget gnupg g++ openssh-client libpng-dev
 
 #instalação do node e yarn
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
   && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
   && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 
@@ -17,7 +17,7 @@ RUN apt-get update \
   && apt-get install -y nodejs \
   && apt-get install -y yarn
 
-RUN npm install vue vue-cli -g
+RUN npm install @vue-cli -g
 
 #extesao PHP no docker
 RUN apt-get install -y libpq-dev \
