@@ -2,21 +2,34 @@ version: "3"
 
 services:
   db:
-    container_name: laravel-db
+    container_name: teste-db
     image: mysql:5.7
-    ports:
-      - 3306:3306
+    restart: unless-stopped
+    tty: true
     volumes:
-      - ./db:/var/lib/mysql #utilizei db para evitar conflitos com o 'database' do laravel (insira outro nome)
+      - ./db:/var/lib/mysql #used 'db' to avoid conflicts with the teste database (insert another name)
     environment:
       - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=laravel
+      - MYSQL_DATABASE=teste
       - MYSQL_USER=admin
       - MYSQL_PASSWORD=password
     networks:
       - backend
-  phpmyadmin:
-    container_name: laravel-phpmyadmin
+  webserver:
+    container_name: teste-web
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+      - ./docker-files/nginx/conf.d/:/etc/nginx/conf.d
+    ports:
+      - 8000:80
+    depends_on:
+      - app
+    networks:
+      - backend
+  phpmyadmin: #this service is optional, remove if necessary
+    container_name: teste-phpmyadmin
     image: phpmyadmin/phpmyadmin
     links:
       - db
@@ -25,19 +38,26 @@ services:
       PMA_PORT: 3306
     ports:
       - '8080:80'
+    depends_on:
+      - webserver
     networks:
       - backend
-  web:
+  app:
     build: .
-    container_name: laravel-web
+    container_name: teste-app
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www
     volumes:
-      - ./:/var/www/html
-    ports:
-      - 80:80
+      - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     depends_on:
       - db
     networks:
       - backend
+volumes:
+  db:
+    driver: local
+
 networks:
   backend:
     driver: bridge
