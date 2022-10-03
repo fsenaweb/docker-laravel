@@ -15,19 +15,35 @@ services:
       - MYSQL_PASSWORD=password
     networks:
       - backend
+
+  app:
+    build: .
+    container_name: teste-app
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    depends_on:
+      - db
+    networks:
+      - backend
+
   webserver:
     container_name: teste-web
     image: nginx:alpine
     restart: unless-stopped
     volumes:
       - ./:/var/www
-      - ./docker-files/nginx/conf.d/:/etc/nginx/conf.d
+      - ./docker-files/nginx/conf.d/local/:/etc/nginx/conf.d
     ports:
-      - '8000:80'
+      - '80:80'
     depends_on:
       - app
     networks:
       - backend
+
   phpmyadmin: #this service is optional, remove if necessary
     container_name: teste-phpmyadmin
     image: phpmyadmin/phpmyadmin
@@ -42,18 +58,7 @@ services:
       - webserver
     networks:
       - backend
-  app:
-    build: .
-    container_name: teste-app
-    restart: unless-stopped
-    tty: true
-    working_dir: /var/www
-    volumes:
-      - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
-    depends_on:
-      - db
-    networks:
-      - backend
+
 volumes:
   db:
     driver: local
