@@ -3,7 +3,7 @@ FROM php:7.4-fpm
 RUN apt-get update -y
 
 #essential files
-RUN apt-get install -y \
+RUN apt-get install -y --no-install-recommends \
     build-essential \
     libpng-dev \
     libonig-dev \
