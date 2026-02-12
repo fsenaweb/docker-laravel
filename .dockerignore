@@ -1,0 +1,8 @@
+.git
+.gitignore
+.idea
+.env
+node_modules
+/vendor
+npm-debug.log
+yarn-error.log
