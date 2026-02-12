@@ -2,23 +2,21 @@ version: "3"
 
 services:
   db:
-    container_name: teste-db
     image: mysql:5.7
     restart: unless-stopped
     tty: true
     volumes:
-      - ./db:/var/lib/mysql #used 'db' to avoid conflicts with the teste database (insert another name)
+      - ./db:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=dbase
-      - MYSQL_USER=admin
-      - MYSQL_PASSWORD=password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     networks:
       - backend
 
   app:
     build: .
-    container_name: teste-app
     restart: unless-stopped
     tty: true
     working_dir: /var/www
@@ -31,7 +29,6 @@ services:
       - backend
 
   webserver:
-    container_name: teste-web
     image: nginx:alpine
     restart: unless-stopped
     volumes:
@@ -45,10 +42,7 @@ services:
       - backend
 
   phpmyadmin: #this service is optional, remove if necessary
-    container_name: teste-phpmyadmin
     image: phpmyadmin/phpmyadmin
-    links:
-      - db
     environment:
       PMA_HOST: db
       PMA_PORT: 3306

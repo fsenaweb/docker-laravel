@@ -1,54 +1,72 @@
-FROM php:8.0-fpm
+# Estágio 1: Base - Instalação de dependências do sistema e extensões PHP
+FROM php:8.3-fpm as base
 
-RUN apt-get update -y
+# Define o diretório de trabalho
+WORKDIR /var/www
 
-#essential files
-RUN apt-get install -y --no-install-recommends \
+# Instala dependências do sistema
+RUN apt-get update && apt-get install -y \
     build-essential \
     libpng-dev \
-    libonig-dev \
     libjpeg62-turbo-dev \
     libfreetype6-dev \
-    locales libzip-dev \
-    zip git supervisor \
+    locales \
+    zip \
     jpegoptim optipng pngquant gifsicle \
-    nano apt-utils iputils-ping \
-    unzip zlib1g-dev libicu-dev wget \
-    gnupg g++ openssh-client libpng-dev \
-    git curl
+    unzip \
+    git \
+    curl \
+    libzip-dev \
+    libonig-dev \
+    libicu-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Instala extensões PHP
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
 
-# Node.js instalation (optional)
-RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - \
-  && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-  && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-
-RUN apt-get update \
-  && apt-get install -y nodejs \
-  && apt-get install -y yarn
-
-# Vue.js CLI instalation (optional)
-RUN yarn global add @vue/cli
-
-# Install extensions
-RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl
-RUN docker-php-ext-install gd
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-
-# Install composer
+# Instala Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Add user for laravel application
-RUN groupadd -g 1000 www
-RUN useradd -u 1000 -ms /bin/bash -g www www
+# -----------------------------------------------------------------------------
 
-# Copy existing application directory permissions
-COPY --chown=www:www . /var/www
+# Estágio 2: Vendor - Instalação das dependências do Composer
+FROM base as vendor
 
-USER www
+COPY database /var/www/database
+COPY composer.json composer.lock /var/www/
+RUN composer install --no-interaction --no-plugins --no-scripts --prefer-dist
 
-# Expose port 9000 and start php-fpm server
+# -----------------------------------------------------------------------------
+
+# Estágio 3: Frontend - Instalação do Node e compilação de assets
+FROM node:16 as frontend
+
+WORKDIR /app
+COPY package.json yarn.lock ./
+RUN yarn install
+COPY . .
+RUN yarn build
+
+# -----------------------------------------------------------------------------
+
+# Estágio Final: App - Cria a imagem final e limpa
+FROM base as app
+
+# Copia as dependências do Composer do estágio 'vendor'
+COPY --from=vendor /var/www/vendor /var/www/vendor
+
+# Copia os assets compilados do estágio 'frontend'
+COPY --from=frontend /app/public /var/www/public
+
+# Copia o restante do código da aplicação
+COPY . /var/www
+
+# Ajusta permissões
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 /var/www/storage
+
+# Expõe a porta e inicia o PHP-FPM
 EXPOSE 9000
 CMD ["php-fpm"]
